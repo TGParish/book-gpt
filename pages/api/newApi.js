@@ -23,7 +23,7 @@ export default async function handler(req, res) {
     model: "text-davinci-003",
     prompt: req.body.data,
     max_tokens: 100,
-    n: 5,
+    n: 1,
     temperature: 0.2,
   });
 
@@ -32,6 +32,6 @@ export default async function handler(req, res) {
   if (!completion.data.choices || completion.data.choices.length === 0) {
     return res.status(400).json({ error: "Unable to generate response" });
   }
-
+  console.log(completion.data.choices[0].text);
   res.status(200).json({ completion: completion.data });
 }

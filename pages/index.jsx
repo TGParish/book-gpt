@@ -2,15 +2,17 @@ import Head from "next/head";
 import { useState } from "react";
 
 export default function Home() {
-  const [selectedOption, setSelectedOption] = useState(null);
-  const [response, setResponse] = useState(null);
-  const [isDisabled, setIsDisabled] = useState(true);
+  const [selectedOption, setSelectedOption] = useState(false);
+  const [response, setResponse] = useState("");
   const [dataFromChatGPT, setDataFromChatGPT] = useState(false);
+  const [error, setError] = useState(false);
+  const [disabledButton, setDisabledButton] = useState(false);
 
   function submitForm(e) {
+    setDisabledButton(true);
     e.preventDefault();
-    sendDataToChatGPT();
     console.log("Ready?");
+    sendDataToChatGPT();
   }
 
   function handleOptionChange(e) {
@@ -18,8 +20,12 @@ export default function Home() {
   }
 
   function handleResponseChange(e) {
+    if (response === "") {
+      setError("Please pick a prompt and type a response");
+    }
+    setError(false);
+    setDisabledButton(false);
     setResponse(e.target.value);
-    console.log(response);
   }
 
   // function handleResponseChange(e) {
@@ -38,8 +44,15 @@ export default function Home() {
   // }
 
   async function sendDataToChatGPT() {
+    if (response === "") {
+      setError("Please pick a prompt and type a response");
+      return;
+    } else {
+      setError(false);
+    }
+
     const data = {
-      data: `show me ${selectedOption} to ${response} and put them in <li> tags`,
+      data: `show me 5 ${selectedOption} to ${response} and put them in <li> tags`,
     };
 
     fetch("/api/newApi", {
@@ -50,12 +63,10 @@ export default function Home() {
       body: JSON.stringify(data),
     })
       .then((response) => response.json())
-      // .then((data) => {
-      //   console.log(data.completion.choices[0].text);
-      // })
       .then((data) => {
         setDataFromChatGPT(data.completion.choices[0].text);
       })
+      .then(setDisabledButton(false))
       .catch((error) => {
         console.error("Error:", error);
       });
@@ -64,7 +75,7 @@ export default function Home() {
   return (
     <>
       <Head>
-        <title>Page Oracle</title>
+        <title>Book GPT</title>
         <meta
           name="description"
           content="Get book recommendations, powered by ai."
@@ -75,7 +86,7 @@ export default function Home() {
       <main>
         <header className="flex flex-col gap-2 mt-2">
           <h1 className="text-center text-4xl text-primary font-bold font-merriweather">
-            Page Oracle 📗
+            Book GPT 📗
           </h1>
           <p className="text-xl text-center">
             Find book recommendations with the power of AI
@@ -98,10 +109,12 @@ export default function Home() {
               name="select-option"
               id="select"
               tite="select-option"
-              className="select select-bordered"
+              className={
+                error ? "select select-bordered" : "select select-bordered"
+              }
               onChange={handleOptionChange}
             >
-              <option value="">Pick a prompt...</option>
+              <option>Pick a prompt...</option>
               <option value="similiar books">Books similiar to...</option>
               <option value="similiar authors">Authors similiar to...</option>
             </select>
@@ -131,6 +144,7 @@ export default function Home() {
             <button
               type="submit"
               className="btn btn-primary"
+              disabled={disabledButton}
               onClick={() => sendDataToChatGPT("author", "book")}
             >
               {selectedOption == "similiar books"
@@ -138,6 +152,28 @@ export default function Home() {
                 : "Find me authors"}
             </button>{" "}
           </form>
+          <section>
+            {error ? (
+              <div className="alert alert-error shadow-lg">
+                <div>
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="stroke-current flex-shrink-0 h-6 w-6"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
+                  </svg>
+                  <span>{error}</span>
+                </div>
+              </div>
+            ) : null}
+          </section>
           {dataFromChatGPT ? (
             <section>
               <div
