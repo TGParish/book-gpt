@@ -28,21 +28,6 @@ export default function Home() {
     setResponse(e.target.value);
   }
 
-  // function handleResponseChange(e) {
-  //   handleResponseChange(e.target.value);
-  // }
-
-  // async function sendDataToChatGPT(prompt, promptResponse) {
-  //   const responseFromApi = await fetch("/api/test.js", {
-  //     method: "POST",
-  //     headers: {
-  //       "Content-Type": "application/json",
-  //     },
-  //     body: JSON.stringify({ prompt, promptResponse }),
-  //   });
-  //   console.log(responseFromApi.json());
-  // }
-
   async function sendDataToChatGPT() {
     if (response === "") {
       setError("Please pick a prompt and type a response");
@@ -52,10 +37,10 @@ export default function Home() {
     }
 
     const data = {
-      data: `show me 5 ${selectedOption} to ${response} and put them in <li> tags`,
+      data: `show me a numbered list of 5 ${selectedOption} to ${response} and end them with </br> tags`,
     };
 
-    fetch("/api/newApi", {
+    fetch("/api/chatGpt", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
