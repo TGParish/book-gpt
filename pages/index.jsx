@@ -1,18 +1,18 @@
 import Head from "next/head";
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 
 export default function Home() {
   const [selectedOption, setSelectedOption] = useState(false);
   const [response, setResponse] = useState("");
   const [dataFromChatGPT, setDataFromChatGPT] = useState(false);
-  const [error, setError] = useState(false);
+  const [errorFromChat, setError] = useState(false);
+  const [formError, setFormError] = useState(false);
   const [disabledButton, setDisabledButton] = useState(false);
 
   function submitForm(e) {
-    setDisabledButton(true);
     e.preventDefault();
-    console.log("Ready?");
-    sendDataToChatGPT();
+    setDisabledButton(true);
+    fetcher();
   }
 
   function handleOptionChange(e) {
@@ -21,23 +21,23 @@ export default function Home() {
 
   function handleResponseChange(e) {
     if (response === "") {
-      setError("Please pick a prompt and type a response");
+      setFormError("Please pick a prompt and type a response");
     }
-    setError(false);
+    setFormError(false);
     setDisabledButton(false);
     setResponse(e.target.value);
   }
 
-  async function sendDataToChatGPT() {
+  function fetcher() {
     if (response === "") {
-      setError("Please pick a prompt and type a response");
+      setFormError("Please pick a prompt and type a response");
       return;
     } else {
-      setError(false);
+      setFormError(false);
     }
 
-    const data = {
-      data: `show me a numbered list of 5 ${selectedOption} to ${response} and end them with </br> tags`,
+    const dataToChat = {
+      data: `show me a numbered list of 5 ${selectedOption} to ${response}`,
     };
 
     fetch("/api/chatGpt", {
@@ -45,11 +45,11 @@ export default function Home() {
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify(data),
+      body: JSON.stringify(dataToChat),
     })
       .then((response) => response.json())
       .then((data) => {
-        setDataFromChatGPT(data.completion.choices[0].text);
+        setDataFromChatGPT(data);
       })
       .then(setDisabledButton(false))
       .catch((error) => {
@@ -69,7 +69,7 @@ export default function Home() {
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <main>
-        <header className="flex flex-col gap-2 mt-2">
+        <header className="flex flex-col gap-2 mt-4">
           <h1 className="text-center text-4xl text-primary font-bold font-merriweather">
             Book GPT 📗
           </h1>
@@ -95,7 +95,7 @@ export default function Home() {
               id="select"
               tite="select-option"
               className={
-                error ? "select select-bordered" : "select select-bordered"
+                formError ? "select select-bordered" : "select select-bordered"
               }
               onChange={handleOptionChange}
             >
@@ -130,15 +130,26 @@ export default function Home() {
               type="submit"
               className="btn btn-primary"
               disabled={disabledButton}
-              onClick={() => sendDataToChatGPT("author", "book")}
+              // onClick={() => submitForm()}
             >
               {selectedOption == "similiar books"
                 ? "Find me books"
                 : "Find me authors"}
             </button>{" "}
           </form>
+          {dataFromChatGPT ? (
+            <div className="flex  justify-center">
+              <div
+                className="lg:w-[40rem] p-4"
+                id="dataList"
+                dangerouslySetInnerHTML={{
+                  __html: dataFromChatGPT.completion.choices[0].text,
+                }}
+              ></div>
+            </div>
+          ) : null}
           <section>
-            {error ? (
+            {formError ? (
               <div className="alert alert-error shadow-lg">
                 <div>
                   <svg
@@ -154,19 +165,11 @@ export default function Home() {
                       d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
                     />
                   </svg>
-                  <span>{error}</span>
+                  <span>{formError}</span>
                 </div>
               </div>
             ) : null}
           </section>
-          {dataFromChatGPT ? (
-            <section>
-              <div
-                id="dataList"
-                dangerouslySetInnerHTML={{ __html: dataFromChatGPT }}
-              ></div>
-            </section>
-          ) : null}
         </section>
       </main>
     </>

@@ -32,6 +32,6 @@ export default async function handler(req, res) {
   if (!completion.data.choices || completion.data.choices.length === 0) {
     return res.status(400).json({ error: "Unable to generate response" });
   }
-  console.log(completion.data.choices[0].text);
+  // console.log(completion.data.choices[0].text);
   res.status(200).json({ completion: completion.data });
 }
